@@ -31,15 +31,19 @@ module.exports = function(dest, req, res, cb) {
       res.write(chunk);
     }).on('end', function() {
       res.end();
-      pres.removeAllListeners();
-      pres.destroy();
-      preq.removeAllListeners();
-      preq.destroy();
+      if (!process.env['LEAK']) {
+        pres.removeAllListeners();
+        preq.removeAllListeners();
+        pres.destroy();
+        preq.destroy();
+      }
       cb();
     });
   }).on('error', function(e) {
-    preq.removeAllListeners();
-    preq.destroy();
+    if (!process.env['LEAK']) {
+      preq.removeAllListeners();
+      preq.destroy();
+    }
     cb(e);
   });
 

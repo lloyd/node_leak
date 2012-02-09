@@ -1,7 +1,26 @@
 const
 child_process = require('child_process'),
 http = require('http'),
-forward = require('./http_forward.js');
+forward = require('./http_forward.js'),
+gcstats = require('gcstats'),
+fs = require('fs');
+
+var startTime = new Date();
+
+var filename = "data_" + (process.env['LEAK'] ? "leak" : "noleak");
+
+var memoryFile = fs.createWriteStream(filename + "_mem.txt");
+var trendFile = fs.createWriteStream(filename + "_trend.txt");
+
+gcstats.on('gc', function(e) {
+  if (e.compacted) {
+    trendFile.write(((new Date() - startTime) / 1000.0).toFixed(1) + " " + gcstats.stats().usage_trend + "\n");
+  }
+});
+
+setInterval(function() {
+  memoryFile.write(((new Date() - startTime) / 1000.0).toFixed(1) + " " + process.memoryUsage().heapUsed + "\n");
+}, 2000);
 
 process.title = 'leak_parent';
 
